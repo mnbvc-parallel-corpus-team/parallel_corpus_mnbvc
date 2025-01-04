@@ -205,6 +205,8 @@ pip install -r requirements.txt
 
 2. 将得到的语料通过本仓库下的 [jsonl_chk.py](jsonl_chk.py) 的后处理，以完成简单去重和 `【不用手填】` 字段的自动填写，用法为 `python jsonl_chk.py out.jsonl` 或者用 `python jsonl_chk.py -d outdir/` 的方式处理整个目录下的 jsonl 文件。在其 `jsonl_rework` 文件夹下会得到后处理完毕的 jsonl 文件。
 
+**注：** `jsonl_chk.py` 现在加入了繁简转换功能，在存在 `cht_text` 但不存在 `zh_text` 时会使用 `BYVoid/OpenCC` 做繁简转换。需要安装依赖：`pip install opencc`
+
 3. 将得到的语料通过 [语料格式检查工具 DataCheck_MNBVC](https://github.com/X94521/DataCheck_MNBVC) 的检测，`python check_data.py --dataset your_folder_path`，其中 `your_folder_path` 为待检测语料数据所在的文件夹。
 
 > datachecker执行完毕后，如果日志文件 ``\logs\check_log.txt`` 显示：

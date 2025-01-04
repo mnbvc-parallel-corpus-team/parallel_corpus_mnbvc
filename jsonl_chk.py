@@ -109,6 +109,7 @@ parser.add_argument('-d', '--directory', type=str, help='Process a directory ins
 parser.add_argument('-a', '--all_directory_mode', type=str, help='Read all files under given directory, then generate output file using given filename specify by this arg')
 parser.add_argument('-v', '--verbose', action='store_true', help='Print deduplication info')
 parser.add_argument('-dr', '--disable_rename', action='store_true', help='Disable auto assign json `filename` field to its file name')
+parser.add_argument('-dc', '--disable_opencc_convert', action='store_true', help='Disable chinese Conversion by BYVoid/OpenCC')
 parser.add_argument('-dbg', '--debug', action='store_true', help='Print debug info')
 parser.add_argument('-b', '--bytes_limit', type=int, default=536870912, help='Specify the upper limit each output jsonl file in bytes')
 # parser.add_argument('-ea', '--enable_assert', action='store_true', help='Enable assertions in the script')
@@ -284,8 +285,22 @@ def gen_new_style_line(file_path: Path, disable_ext_field_check: bool):
                 for pid, p in enumerate(data['段落']):
                     for k in KEEP_KEYS:
                         data_cloned[k] = p[k]
+                    cht_text: str = data_cloned["cht_text"]
+                    zh_text: str = data_cloned["zh_text"]
+                    if not zh_text and cht_text and not args.disable_opencc_convert:
+                        import opencc
+                        converter = opencc.OpenCC(config="t2s")
+                        zh_text = converter.convert(cht_text)
+                        data_cloned["zh_text"] = zh_text
                     yield data_cloned
             else:
+                cht_text: str = data["cht_text"]
+                zh_text: str = data["zh_text"]
+                if not zh_text and cht_text and not args.disable_opencc_convert:
+                    import opencc
+                    converter = opencc.OpenCC(config="t2s")
+                    zh_text = converter.convert(cht_text)
+                    data["zh_text"] = zh_text
                 yield data # 需要避免把json序列化之后的东西保存下来，可能会有字符串形式的表示的数十倍大
 
 def process_file(file_path: Path):
@@ -483,8 +498,14 @@ if __name__ == "__main__":
 
     elif args.input:
         print('[single file] filename:',args.input)
-        process_file(Path(args.input))
-        out_file(Path(args.input))
+        input_path = Path(args.input)
+        process_file(input_path)
+        out_file(input_path)
+        if bio.tell() > 0:
+            next_out_file_path = get_next_out_file_path(input_path.parent, input_path)
+            print("out file:",next_out_file_path)
+            with open(next_out_file_path, "wb") as fo:
+                fo.write(bio.getbuffer().tobytes())
     else:
         print("请提供一个目录或输入文件路径。")
         exit(0)
