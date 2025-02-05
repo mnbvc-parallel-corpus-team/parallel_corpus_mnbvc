@@ -15,9 +15,12 @@ doc_cache_dir.mkdir(exist_ok=True)
 
 filelist = list(os.listdir(fl_cache_dir))
 
+RETRIES = 5
+
 LANGMAP = {
     'ar': 'A',
     'zh': 'C',
+    'zh-cn': 'C',
     'en': 'E',
     'fr': 'F',
     'ru': 'R',
@@ -31,13 +34,14 @@ task_list = asyncio.Queue()
 async def get_doc():
     while not task_list.empty():
         symbol, l, save_filename_pdf, save_filename_doc = await task_list.get()
-        for retry in range(3):
+        url = f'https://documents.un.org/api/symbol/access?s={symbol}&l={l}&t=doc'
+        for retry in range(RETRIES):
             try:
                 async with aiohttp.ClientSession() as session:
-                    resp = await session.get(f'https://documents.un.org/api/symbol/access?s={symbol}&l={l}&t=doc', headers={
+                    resp = await session.get(url, headers={
                         "accept-encoding":"gzip, deflate, br", # br压缩要额外装brotli这个库才能有requests支持
                         "user-agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
-                    })
+                    }, timeout=120)
                     if resp.status == 200:
                         bin_content = await resp.content.read()
                         typ = magic.from_buffer(bin_content, mime=True)
@@ -57,19 +61,25 @@ async def get_doc():
                             f.write(bin_content)
                         print('download done:', save_dir)
                         break
+                    elif resp.status == 404:
+                        # print(resp)
+                        # print(resp.headers)
+                        # print(await resp.text())
+                        print(f'!!!!!404 NOT FOUND {url} {save_filename_doc}!!!!!')
+                        break
                     else:
-                        if retry == 2:
+                        if retry == RETRIES - 1:
                             print(resp)
                             print(resp.headers)
                             print(await resp.text())
-                            print('!!!!!ERROR!!!!!')
-                            return
+                            print(f'!!!!!ERROR {url} {save_filename_doc}!!!!!')
+                            break
             except Exception as e:
                 print(e)
                 print('retry:', retry)
-                if retry == 2:
-                    print('!!!!!ERROR!!!!!')
-                    return
+                if retry == RETRIES - 1:
+                    print(f'!!!!!Exception {url} {save_filename_doc}!!!!!')
+                    break
 
 async def main():
     for i in filelist:
@@ -91,7 +101,7 @@ async def main():
                         await task_list.put((symbol, l, save_filename_pdf, save_filename_doc))
 
     workers = [
-        get_doc() for _ in range(16)
+        get_doc() for _ in range(32)
     ]
     await asyncio.gather(*workers)
 

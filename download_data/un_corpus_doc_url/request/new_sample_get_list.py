@@ -3,8 +3,8 @@ import requests
 
 import const
 
-FROM_YEAR = 2023 # 输入参数可以改这俩，建议是写一样的，其它文件的常量不要乱动
-TO_YEAR = 2023
+FROM_YEAR = 2024 # 输入参数可以改这俩，建议是写一样的，其它文件的常量不要乱动
+TO_YEAR = 2024
 
 fl_cache_dir =  const.DOWNLOAD_FILELIST_CACHE_DIR # 我不建议改const里面预定义的目录，如果确实需要改最好是找一个固定的空文件夹把WORKDIR换掉
 print('cache file stored in:', fl_cache_dir.absolute())
@@ -40,17 +40,19 @@ session.headers.update(headers)
 i = 1
 mLen = 135 # 随意设置的初始值
 td = 13416 # 随意设置的初始值
+PER_PAGE = 25
+RETRY_COUNT = 5
 
 while i < mLen + 1:
     if not is_cache_exists(i):
-        nexturl = f'https://search.un.org/api/search?collection=ods&currentPageNumber={i}&fromYear={FROM_YEAR}&q=*&row=100&sort=ascending&toYear={TO_YEAR}&mLen={mLen}&td={td}'
-        for retry in range(3):
+        nexturl = f'https://search.un.org/api/search?collection=ods&currentPageNumber={i}&fromYear={FROM_YEAR}&q=*&row={PER_PAGE}&sort=ascending&toYear={TO_YEAR}&mLen={mLen}&td={td}'
+        for retry in range(RETRY_COUNT):
             resp = session.get(nexturl)
             print(i, resp)
             if resp.status_code == 200:
                 j = resp.json()
                 td = j['numberDocsFound']
-                mLen = ceil(td / 100)
+                mLen = ceil(td / PER_PAGE)
                 if i > mLen:
                     print('out of range, done.')
                     print(j)
@@ -60,7 +62,7 @@ while i < mLen + 1:
                 break
             else:
                 print(resp, 'retry:', retry)
-                if retry == 2:
+                if retry == RETRY_COUNT - 1:
                     print(resp.headers)
                     print(resp.text)
                     print('!!!!!ERROR!!!!!')

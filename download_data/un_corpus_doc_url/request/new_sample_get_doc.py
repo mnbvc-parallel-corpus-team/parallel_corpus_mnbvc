@@ -21,6 +21,7 @@ LANGMAP = {
     'fr': 'F',
     'ru': 'R',
     'es': 'S',
+    'zh-cn': 'C',
     # 'other': 'O', # 一般是德语
     'ot': 'O',
 }
