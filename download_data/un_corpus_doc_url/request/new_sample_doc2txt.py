@@ -975,41 +975,18 @@ if __name__ == '__main__':
     dataset.save_to_disk(const.CONVERT_DATASET_CACHE_DIR)
 
     def save_jsonl(row):
-        fn = row['record']
         template = {
-            '文件名': fn,
-            '是否待查文件': False,
-            '是否重复文件': False,
-            '段落数': 1,
-            '去重段落数': 0,
-            '低质量段落数': 0,
-            '段落': {
-                '行号': 1,
-                '是否重复': False,
-                '是否跨文件重复': False,
-                'zh_text_md5': hashlib.md5(row['zh'].encode('utf-8')).hexdigest(),
-                'zh_text': row['zh'],
-                'en_text': row['en'],
-                'ar_text': row['ar'],
-                'nl_text': '',
-                'de_text': row['de'],
-                'eo_text': '',
-                'fr_text': row['fr'],
-                'he_text': '',
-                'it_text': '',
-                'ja_text': '',
-                'pt_text': '',
-                'ru_text': row['ru'],
-                'es_text': row['es'],
-                'sv_text': '',
-                'ko_text': '',
-                'th_text': '',
-                'other1_text': '',
-                'other2_text': '',
-                '拓展字段': r'{}',
-                '时间': datetime.datetime.now().strftime("%Y%m%d")
-            },
-            '拓展字段': r'{}',
+            '文件名': row['record'],
+            '是否重复': False,
+            '是否跨文件重复': False,
+            'zh_text': row['zh'],
+            'en_text': row['en'],
+            'ar_text': row['ar'],
+            'de_text': row['de'],
+            'fr_text': row['fr'],
+            'ru_text': row['ru'],
+            'es_text': row['es'],
+            '扩展字段': json.dumps({'k':row['symbol']}),
             '时间': datetime.datetime.now().strftime("%Y%m%d")
         }
         with const.FILEWISE_JSONL_OUTPUT_DIR.open('a', encoding='utf-8') as f:
