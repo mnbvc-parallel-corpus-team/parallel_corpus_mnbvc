@@ -285,8 +285,8 @@ def gen_new_style_line(file_path: Path, disable_ext_field_check: bool):
                 for pid, p in enumerate(data['段落']):
                     for k in KEEP_KEYS:
                         data_cloned[k] = p[k]
-                    cht_text: str = data_cloned["cht_text"]
-                    zh_text: str = data_cloned["zh_text"]
+                    cht_text: str = data_cloned.get("cht_text", "")
+                    zh_text: str = data_cloned.get("zh_text", "")
                     if not zh_text and cht_text and not args.disable_opencc_convert:
                         import opencc
                         converter = opencc.OpenCC(config="t2s")
@@ -294,8 +294,8 @@ def gen_new_style_line(file_path: Path, disable_ext_field_check: bool):
                         data_cloned["zh_text"] = zh_text
                     yield data_cloned
             else:
-                cht_text: str = data["cht_text"]
-                zh_text: str = data["zh_text"]
+                cht_text: str = data.get("cht_text", "")
+                zh_text: str = data.get("zh_text", "")
                 if not zh_text and cht_text and not args.disable_opencc_convert:
                     import opencc
                     converter = opencc.OpenCC(config="t2s")
@@ -320,8 +320,9 @@ def process_file(file_path: Path):
         #######去除空行#######
         line_dedup_set = set()
         for lang_field in LANG_FIELDS:
-            linejson[lang_field] = linejson[lang_field].strip()
-            line_dedup_set.add(linejson[lang_field])
+            linejsonfield = linejson.get(lang_field, "").strip()
+            linejson[lang_field] = linejsonfield
+            line_dedup_set.add(linejsonfield)
         line_dedup_set.discard("")
         if len(line_dedup_set) <= 1:
             if args.verbose:
@@ -354,8 +355,8 @@ def process_file(file_path: Path):
         # 计算【去重段落数】、【低质量段落数】，填写【是否重复】
         # low_quality_count = filename2low_quality_count.setdefault(linejson['文件名'], 0)
         zh_text_set: set = filename2zh_text_digest.setdefault(linejsonfilename, set())
-        zh_text: str = linejson["zh_text"]
-        en_text: str = linejson["en_text"]
+        zh_text: str = linejson.get("zh_text","")
+        en_text: str = linejson.get("en_text","")
         if not zh_text or not en_text:
             filename2low_quality_count[linejsonfilename] += 1
         # _prvlen = len(zh_text_set)
@@ -401,6 +402,9 @@ def out_file(file_path: Path):
     for lineidx, linejson in enumerate(gen_new_style_line(file_path, True)):
         if (str(file_path), lineidx) not in valid_line_idx_set:
             continue
+        for lang_field in LANG_FIELDS:
+            linejsonfield = linejson.get(lang_field, "").strip()
+            linejson[lang_field] = linejsonfield
         linejsonfilename = linejson['文件名']
         filename2linecounter[linejsonfilename] += 1
         dedup_bytes = linejson["zh_text"].encode("utf-8")
