@@ -153,3 +153,17 @@ jsonl_test
 md5.cpp
 md5.h
 json.hpp
+
+download_data/un_corpus_doc_url/request/alresult_dataset
+download_data/un_corpus_doc_url/request/cvcache_dataset
+download_data/un_corpus_doc_url/request/cvcache_docx
+download_data/un_corpus_doc_url/request/cvcache_flatten_table_txt
+download_data/un_corpus_doc_url/request/cvcache_txt
+download_data/un_corpus_doc_url/request/dlcache_doc
+download_data/un_corpus_doc_url/request/dlcache_filelist
+download_data/un_corpus_doc_url/request/jsonl_reworked
+download_data/un_corpus_doc_url/request/trcache_pkl
+download_data/un_corpus_doc_url/request/trresult_dataset
+download_data/un_corpus_doc_url/request/filewise_result.jsonl
+download_data/un_corpus_doc_url/request/blockwise_result.jsonl
+download_data/un_corpus_doc_url/request/dbglog*
