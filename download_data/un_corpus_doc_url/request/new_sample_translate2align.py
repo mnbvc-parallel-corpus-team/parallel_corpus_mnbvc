@@ -13,7 +13,9 @@ import pylcs
 
 import const
 
-DROP_THRESHOLD = 0.2
+DROP_THRESHOLD = 0.3
+
+print("USING DROP_THRESHOLD = ", DROP_THRESHOLD)
 
 LCSTokenInfo = namedtuple('LCSTokenInfo', ('token', 'length', 'source_line_id'))
 def tokenize_by_space_splited_word(input_lines: list[str], output_lines: list[str], offset=0) -> Tuple[list[LCSTokenInfo], list[LCSTokenInfo]]:
