@@ -88,6 +88,7 @@ mnbvc 平行语料小组的通用后处理脚本。每个语料文件都应该�
 
 """
 from collections import Counter
+from datetime import datetime
 import json
 import hashlib
 import argparse
@@ -338,7 +339,7 @@ def process_file(file_path: Path):
         dedup_bytes = json.dumps(dedup_dict, ensure_ascii=False, sort_keys=True).encode('utf-8')
         # digest = hashlib.sha256(dedup_str).hexdigest() + hashlib.md5(dedup_str).hexdigest() # 选一个快又不那么容易冲突的办法就行
         # digest = hashlib.sha256(dedup_str).hexdigest()
-        digest = hashlib.md5(dedup_bytes).digest() + (len(dedup_bytes) % 256).to_bytes(1, signed=False)
+        digest = hashlib.md5(dedup_bytes).digest() + (len(dedup_bytes) % 256).to_bytes(1, byteorder='big', signed=False)
         _prvlen = len(dedup_str_set)
         dedup_str_set.add(digest)
         _afterlen = len(dedup_str_set)
@@ -361,7 +362,7 @@ def process_file(file_path: Path):
             filename2low_quality_count[linejsonfilename] += 1
         # _prvlen = len(zh_text_set)
         dedup_bytes = zh_text.encode("utf-8")
-        digest = hashlib.md5(dedup_bytes).digest() + (len(dedup_bytes) % 256).to_bytes(1, signed=False) # 内存瓶颈
+        digest = hashlib.md5(dedup_bytes).digest() + (len(dedup_bytes) % 256).to_bytes(1, byteorder='big', signed=False) # 内存瓶颈
         zh_text_set.add(digest)
         # _afterlen = len(zh_text_set)
     for filename, zh_text_set in filename2zh_text_digest.items():
@@ -409,7 +410,7 @@ def out_file(file_path: Path):
         filename2linecounter[linejsonfilename] += 1
         dedup_bytes = linejson["zh_text"].encode("utf-8")
         zhmd5 = hashlib.md5(dedup_bytes)
-        digest = zhmd5.digest() + (len(dedup_bytes) % 256).to_bytes(1, signed=False)
+        digest = zhmd5.digest() + (len(dedup_bytes) % 256).to_bytes(1, byteorder='big', signed=False)
         zh_text_set = filename2zh_text_digest[linejsonfilename]
         _prvlen = len(zh_text_set)
         zh_text_set.discard(digest)
@@ -418,6 +419,7 @@ def out_file(file_path: Path):
         linejson['是否重复文件'] = False # 平行语料组固定将此字段给False
         linejson['是否跨文件重复'] = False # 平行语料组固定将此字段给False
 
+        linejson['时间'] = datetime.now().strftime("%Y%m%d")
         linejson['是否重复'] = _afterlen == _prvlen
         linejson['段落数'] = filename2linecount[linejsonfilename]
         linejson['去重段落数'] = filename2linecount[linejsonfilename] - filename2zh_text_dedup_count[linejsonfilename] # 经核实，此字段统计的是“重复了的段落”的个数
