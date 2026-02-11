@@ -170,7 +170,7 @@ LANG_FIELDS = [
     "vi_text",
 ]
 
-NEW_STYLE_FIELDS = [
+NEW_STYLE_FIELDS = {
     "文件名",
     "是否待查文件",
     "是否重复文件",
@@ -202,7 +202,7 @@ NEW_STYLE_FIELDS = [
     "扩展字段",
     "时间",
     "zh_text_md5",
-]
+}
 
 # 文件统计相关的走全局变量
 # 以文件名为主键，不同的文件名不共享行号、行结构、中文去重计数
@@ -295,6 +295,9 @@ def gen_new_style_line(file_path: Path, disable_ext_field_check: bool):
                         data_cloned["zh_text"] = zh_text
                     yield data_cloned
             else:
+                for key in list(data.keys()):
+                    if key not in NEW_STYLE_FIELDS:
+                        data.pop(key)
                 cht_text: str = data.get("cht_text", "")
                 zh_text: str = data.get("zh_text", "")
                 if not zh_text and cht_text and not args.disable_opencc_convert:
@@ -302,7 +305,7 @@ def gen_new_style_line(file_path: Path, disable_ext_field_check: bool):
                     converter = opencc.OpenCC(config="t2s")
                     zh_text = converter.convert(cht_text)
                     data["zh_text"] = zh_text
-                yield data # 需要避免把json序列化之后的东西保存下来，可能会有字符串形式的表示的数十倍大
+                yield data # 需要避免把json序列化之前的dict保存下来，可能会有字符串形式的表示的数十倍大
 
 def process_file(file_path: Path):
     global is_first
